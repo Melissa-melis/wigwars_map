@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>wigwars colonies map</title>
+  <link rel="stylesheet" href="https://maps.secondlife.com/_styles/sl.mapapi2.css">
+  <script src="https://maps.secondlife.com/_scripts/sl.mapapi2.js"></script>
+  <style>
+    html, body, #map { margin: 0; height: 100%; width: 100%; background: #1d475f; }
+    .leaflet-marker-icon { filter: initial; }
+    .leaflet-control-container { display: none !important; }
+    .hint, .disclaimer {
+      font: 12px/1.4 system-ui, sans-serif; color: #eee;
+      background: rgba(0,0,0,.55); padding: 8px 10px; border-radius: 8px;
+    }
+    .hint {
+      position: absolute; z-index: 1000; left: 12px; bottom: 12px;
+    }
+    .left-stack {
+      position: absolute; z-index: 1000; left: 12px; top: 12px;
+      width: min(480px, calc(100% - 24px));
+      display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none;
+    }
+    .left-stack > * { pointer-events: auto; }
+    .disclaimer {
+      color: #ccc; font-size: 11px;
+    }
+    .filter-panel {
+      position: absolute; z-index: 1000; top: 12px; right: 12px;
+      width: min(260px, calc(100% - 24px));
+      font: 12px/1.4 system-ui, sans-serif; color: #eee;
+      background: rgba(0,0,0,.62); padding: 10px 10px 8px; border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.35);
+      backdrop-filter: blur(4px);
+    }
+    .filter-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px; margin-bottom: 8px;
+    }
+    .filter-head h3 {
+      margin: 0; font-size: 13px; font-weight: 650; letter-spacing: .02em;
+    }
+    .filter-head button, .filter-actions button {
+      appearance: none; border: 1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.08); color: #eee;
+      border-radius: 6px; padding: 3px 8px; font: 11px/1.2 system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .filter-head button:hover, .filter-actions button:hover {
+      background: rgba(255,255,255,.16);
+    }
+    .filter-actions { display: flex; gap: 6px; margin-bottom: 8px; }
+    .filter-actions button { flex: 1; padding: 5px 8px; }
+    .filter-list {
+      max-height: min(52vh, 420px); overflow: auto;
+      display: flex; flex-direction: column; gap: 2px;
+      padding-right: 2px;
+    }
+    .filter-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 3px 4px; border-radius: 5px; cursor: pointer;
+      user-select: none;
+    }
+    .filter-item:hover { background: rgba(255,255,255,.08); }
+    .filter-item input { margin: 0; accent-color: #7ec8e3; }
+    .filter-ico {
+      width: 1.4em; text-align: center; flex: 0 0 1.4em;
+      font-size: 14px; line-height: 1;
+    }
+    .filter-ico img { width: 14px; height: 14px; object-fit: contain; vertical-align: middle; }
+    .filter-name { flex: 1; text-transform: capitalize; }
+    .filter-count { color: #aaa; font-size: 11px; }
+    .filter-note {
+      margin-top: 7px; color: #bbb; font-size: 10px;
+    }
+    .filter-panel.collapsed .filter-actions,
+    .filter-panel.collapsed .filter-list,
+    .filter-panel.collapsed .filter-note { display: none; }
+    .share-panel {
+      width: min(280px, 100%);
+      font: 12px/1.4 system-ui, sans-serif; color: #eee;
+      background: rgba(0,0,0,.62); padding: 10px; border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,.35);
+    }
+    .share-panel .row { display: flex; gap: 6px; flex-wrap: wrap; }
+    .share-panel button {
+      appearance: none; border: 1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.08); color: #eee;
+      border-radius: 6px; padding: 5px 8px; font: 11px/1.2 system-ui, sans-serif;
+      cursor: pointer; flex: 1;
+    }
+    .share-panel button:hover { background: rgba(255,255,255,.16); }
+    .share-panel button.active { background: #1f4a7a; border-color: #8ab4e0; }
+    .share-panel .meta { margin-top: 6px; color: #bbb; font-size: 11px; }
+    .share-panel .pin-list {
+      margin-top: 6px; max-height: 140px; overflow: auto;
+    }
+    .share-panel .pin-row {
+      display: flex; gap: 6px; align-items: center;
+      padding: 2px 0; border-top: 1px solid rgba(255,255,255,.1);
+      cursor: pointer;
+    }
+    .share-panel .pin-row button { flex: 0 0 auto; padding: 2px 6px; cursor: pointer; }
+    .leaflet-popup-content hr.pin-sep {
+      border: 0; border-top: 1px solid rgba(255,255,255,.25); margin: 8px 0;
+    }
+    .share-panel #pin-url {
+      width: 100%; margin-top: 6px; box-sizing: border-box;
+      background: rgba(255,255,255,.08); color: #ddd;
+      border: 1px solid rgba(255,255,255,.25); border-radius: 6px;
+      padding: 4px 6px; font: 10px/1.3 ui-monospace, monospace;
+    }
+    .user-pin {
+      width: 18px; height: 18px;
+      background: #2ec4b6;
+      border: 2px solid #f4fffd;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 2px 6px rgba(0,0,0,.55);
+    }
+    .leaflet-container.pinning,
+    .leaflet-container.pinning .leaflet-interactive,
+    .leaflet-container.pinning .leaflet-grab,
+    .leaflet-container.pinning .leaflet-dragging {
+      cursor: crosshair !important;
+    }
+    .modal button {
+      appearance: none; border: 1px solid rgba(255,255,255,.28);
+      background: rgba(255,255,255,.08); color: #eee;
+      border-radius: 6px; padding: 5px 8px; font: 11px/1.2 system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .modal input, .modal textarea {
+      background: rgba(255,255,255,.08); color: #eee; border: 1px solid rgba(255,255,255,.25);
+      border-radius: 6px; padding: 4px 6px; font: 12px system-ui, sans-serif;
+    }
+    .live-hint { margin-top: 6px; color: #ccc; font-size: 11px; }
+    .modal {
+      display: none; position: absolute; z-index: 1100; left: 50%; top: 50%;
+      transform: translate(-50%, -50%); width: min(360px, calc(100% - 24px));
+      background: rgba(8,14,22,.95); color: #eee; padding: 12px;
+      border-radius: 10px; font: 12px/1.4 system-ui, sans-serif;
+      box-shadow: 0 8px 28px rgba(0,0,0,.5);
+    }
+    .modal.on { display: block; }
+    .modal h3 { margin: 0 0 8px; font-size: 14px; }
+    .modal label { display: block; margin: 6px 0 3px; color: #ccc; }
+    .modal textarea { width: 100%; min-height: 70px; resize: vertical; box-sizing: border-box; }
+    .modal input { width: 100%; box-sizing: border-box; }
+    .modal .row { display: flex; gap: 6px; margin-top: 10px; }
+    .modal .row button { flex: 1; }
+    .leaflet-popup-content a.slurl {
+      display: inline-block;
+      margin-top: 6px;
+      color: #9ad7ff;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .leaflet-popup-content a.slurl:hover { text-decoration: underline; }
+    .emo-marker { background: none !important; border: none !important; }
+    .emo {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(8,18,28,.9); border: 1px solid rgba(255,255,255,.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; line-height: 1;
+      box-shadow: 0 2px 8px rgba(0,0,0,.5);
+    }
+    .redpin {
+      width: 16px; height: 16px; background: #e23b2e;
+      border: 2px solid #fff; border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0 2px 6px rgba(0,0,0,.45);
+    }
+    .warn {
+      width: 32px; height: 30px;
+      background: #f0c400;
+      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+      display: flex; align-items: flex-end; justify-content: center;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.55));
+    }
+    .warn span {
+      color: #111; font: 700 13px/1 system-ui, sans-serif;
+      padding-bottom: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div class="hint" id="hint">WigWars Map — 53 colonies, 2 specials · grid center 1128, 1062</div>
+  <div class="left-stack">
+  <div class="disclaimer">This map is provided as is, without any guarantee, and is not affiliated with WigWars or N+K products. For any questions or update requests, please contact me in-world: Mélissa (melis).<br><br>No data is stored on a server. Your markers stay in your browser and are encoded in the share URL. Nobody, including me, can see them unless you send that URL.</div>
+  <aside class="share-panel" id="share-panel">
+    <div class="row">
+      <button type="button" id="pin-add">Add marker</button>
+      <button type="button" id="pin-copy">Copy URL</button>
+      <button type="button" id="pin-reset">Delete all</button>
+    </div>
+    <div class="meta" id="pin-status">Share the url</div>
+    <input id="pin-url" type="text" readonly spellcheck="false" placeholder="share URL appears here">
+    <div class="pin-list" id="pin-list"></div>
+  </aside>
+  </div>
+  <aside class="filter-panel" id="filter-panel">
+    <div class="filter-head">
+      <h3>Goods filter</h3>
+      <button type="button" id="filter-toggle" aria-expanded="true">hide</button>
+    </div>
+    <div class="filter-actions">
+      <button type="button" id="filter-all">Select all</button>
+      <button type="button" id="filter-none">Select none</button>
+    </div>
+    <div class="filter-list" id="filter-list"></div>
+    <div class="filter-note">Markers with no product stay visible.</div>
+  </aside>
+  <div class="modal" id="pin-modal">
+    <h3>User marker</h3>
+    <div class="live-hint" id="pin-coords"></div>
+    <label for="pin-title">Title</label>
+    <input id="pin-title" type="text" maxlength="40" placeholder="short label">
+    <label for="pin-note">Note (optional)</label>
+    <input id="pin-note" type="text" maxlength="80" placeholder="shown in the popup">
+    <div class="row">
+      <button type="button" id="pin-save">Add</button>
+      <button type="button" id="pin-cancel">Cancel</button>
+    </div>
+  </div>
+  <script>
+    const map = SLMap(document.getElementById("map"));
+    map.setView([1062, 1128], 3);
+    const allMarkers = [];
+    const hintBase = document.getElementById("hint").textContent;
+
+    // drop a colony/special pin coming from python
+    function placeMarker(latlng, opts, popup, prod, icon) {
+      const marker = L.marker(latlng, opts).bindPopup(popup);
+      allMarkers.push({
+        marker: marker,
+        prod: (prod || "").trim(),
+        icon: (icon || "").trim(),
+        visible: true
+      });
+      marker.addTo(map);
+    }
+
+    const PIN_RED = L.divIcon({className:'emo-marker',html:'<div class="redpin"></div>',iconSize:[22,30],iconAnchor:[11,30]});
+    const PIN_1 = L.divIcon({className:'emo-marker',html:'<div class="emo">🍷</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_2 = L.divIcon({className:'emo-marker',html:'<div class="emo">🐟</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_3 = L.divIcon({className:'emo-marker',html:'<div class="emo">🦐</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_4 = L.divIcon({className:'emo-marker',html:'<div class="emo">🌾</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_5 = L.divIcon({className:'emo-marker',html:'<div class="emo">🔩</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_6 = L.divIcon({className:'emo-marker',html:'<div class="emo">🌲</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_7 = L.divIcon({className:'emo-marker',html:'<div class="emo">🦑</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_8 = L.divIcon({className:'emo-marker',html:'<div class="emo">🏺</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_9 = L.divIcon({className:'emo-marker',html:'<div class="emo">🌿</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_10 = L.divIcon({className:'emo-marker',html:'<div class="emo">🐳</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_11 = L.divIcon({className:'emo-marker',html:'<div class="emo">🧂</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_12 = L.divIcon({className:'emo-marker',html:'<div class="emo">🛢️</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_13 = L.divIcon({className:'emo-marker',html:'<div class="emo">🧵</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_14 = L.divIcon({className:'emo-marker',html:'<div class="emo">🚬</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_15 = L.divIcon({className:'emo-marker',html:'<div class="emo">🧱</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_16 = L.divIcon({className:'emo-marker',html:'<div class="emo">🥃</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_17 = L.divIcon({className:'emo-marker',html:'<div class="emo">☘️</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_18 = L.divIcon({className:'emo-marker',html:'<div class="emo">🍫</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_19 = L.divIcon({className:'emo-marker',html:'<div class="emo">☕</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_20 = L.divIcon({className:'emo-marker',html:'<div class="emo">🍯</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_21 = L.divIcon({className:'emo-marker',html:'<div class="emo">👨🏻‍🦲</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_22 = L.divIcon({className:'emo-marker',html:'<div class="emo">⚒️</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_23 = L.divIcon({className:'emo-marker',html:'<div class="emo">🍚</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_24 = L.divIcon({className:'emo-marker',html:'<div class="emo">🍎</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_25 = L.divIcon({className:'emo-marker',html:'<div class="emo">🥥</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_26 = L.divIcon({className:'emo-marker',html:'<div class="emo">🦪</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const PIN_27 = L.divIcon({className:'emo-marker',html:'<div class="emo">🍬</div>',iconSize:[28,28],iconAnchor:[14,28]});
+    const WARN_0 = L.divIcon({className:'emo-marker',html:'<div class="warn"><span>☠️</span></div>',iconSize:[32,30],iconAnchor:[16,30]});
+    const WARN_1 = L.divIcon({className:'emo-marker',html:'<div class="warn"><span>!</span></div>',iconSize:[32,30],iconAnchor:[16,30]});
+    placeMarker([1056+0.5, 1134+0.5], {icon:PIN_1}, "\u003ch4\u003eWicktro\u003c/h4\u003eProduct: wine\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Wicktro/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Wicktro/128/128/23\u003c/a\u003e", "wine", "🍷");
+    placeMarker([1048+0.5, 1135+0.5], {icon:PIN_2}, "\u003ch4\u003eBlake Sea - Sirens Isle\u003c/h4\u003eProduct: fish\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Blake%20Sea%20-%20Sirens%20Isle/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Blake Sea - Sirens Isle/128/128/23\u003c/a\u003e", "fish", "🐟");
+    placeMarker([1050+0.5, 1133+0.5], {icon:PIN_3}, "\u003ch4\u003eBlake Sea - Half Hitch\u003c/h4\u003eProduct: shrimps\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Blake%20Sea%20-%20Half%20Hitch/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Blake Sea - Half Hitch/128/128/23\u003c/a\u003e", "shrimps", "🦐");
+    placeMarker([1048+0.5, 1133+0.5], {icon:PIN_4}, "\u003ch4\u003eBlake Sea - Windlass\u003c/h4\u003eProduct: wheat\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Blake%20Sea%20-%20Windlass/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Blake Sea - Windlass/128/128/23\u003c/a\u003e", "wheat", "🌾");
+    placeMarker([1049+0.5, 1131+0.5], {icon:PIN_5}, "\u003ch4\u003eNautilus - Byth\u003c/h4\u003eProduct: metals\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Nautilus%20-%20Byth/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Nautilus - Byth/128/128/23\u003c/a\u003e", "metals", "🔩");
+    placeMarker([1053+0.5, 1133+0.5], {icon:PIN_6}, "\u003ch4\u003eBlake Sea - Spyglass\u003c/h4\u003eProduct: timber\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Blake%20Sea%20-%20Spyglass/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Blake Sea - Spyglass/128/128/23\u003c/a\u003e", "timber", "🌲");
+    placeMarker([1051+0.5, 1136+0.5], {icon:PIN_7}, "\u003ch4\u003eBlake Sea - Crows Nest\u003c/h4\u003eProduct: squid\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Blake%20Sea%20-%20Crows%20Nest/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Blake Sea - Crows Nest/128/128/23\u003c/a\u003e", "squid", "🦑");
+    placeMarker([1048+0.5, 1122+0.5], {icon:PIN_8}, "\u003ch4\u003eNautilus - Yamm\u003c/h4\u003eProduct: pottery\u003cbr\u003eFaction: The Honourable EIC\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Nautilus%20-%20Yamm/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Nautilus - Yamm/128/128/23\u003c/a\u003e", "pottery", "🏺");
+    placeMarker([1046+0.5, 1123+0.5], {icon:PIN_9}, "\u003ch4\u003eHowe\u003c/h4\u003eProduct: hemp\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Howe/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Howe/128/128/23\u003c/a\u003e", "hemp", "🌿");
+    placeMarker([1062+0.5, 1128+0.5], {icon:PIN_10}, "\u003ch4\u003eAhab's Haunt\u003c/h4\u003eProduct: blubber\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Ahab%27s%20Haunt/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Ahab's Haunt/128/128/23\u003c/a\u003e", "blubber", "🐳");
+    placeMarker([1060+0.5, 1134+0.5], {icon:PIN_11}, "\u003ch4\u003eSkradski\u003c/h4\u003eProduct: salt\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Skradski/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Skradski/128/128/23\u003c/a\u003e", "salt", "🧂");
+    placeMarker([1075+0.5, 1137+0.5], {icon:PIN_8}, "\u003ch4\u003eValenza\u003c/h4\u003eProduct: porcelain\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Valenza/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Valenza/128/128/23\u003c/a\u003e", "porcelain", "🏺");
+    placeMarker([1037+0.5, 1100+0.5], {icon:PIN_1}, "\u003ch4\u003eKingpost\u003c/h4\u003eProduct: rum\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Kingpost/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Kingpost/128/128/23\u003c/a\u003e", "rum", "🍷");
+    placeMarker([1034+0.5, 1100+0.5], {icon:PIN_7}, "\u003ch4\u003eTuulikki\u003c/h4\u003eProduct: squid\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Tuulikki/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Tuulikki/128/128/23\u003c/a\u003e", "squid", "🦑");
+    placeMarker([1041+0.5, 1100+0.5], {icon:PIN_3}, "\u003ch4\u003eWardroom\u003c/h4\u003eProduct: shrimps\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Wardroom/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Wardroom/128/128/23\u003c/a\u003e", "shrimps", "🦐");
+    placeMarker([1043+0.5, 1101+0.5], {icon:PIN_12}, "\u003ch4\u003eGunport\u003c/h4\u003eProduct: tar\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Gunport/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Gunport/128/128/23\u003c/a\u003e", "tar", "🛢️");
+    placeMarker([1045+0.5, 1102+0.5], {icon:PIN_13}, "\u003ch4\u003eTonar\u003c/h4\u003eProduct: silk\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Tonar/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Tonar/128/128/23\u003c/a\u003e", "silk", "🧵");
+    placeMarker([1046+0.5, 1103+0.5], {icon:PIN_2}, "\u003ch4\u003eOrlop\u003c/h4\u003eProduct: fish\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Orlop/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Orlop/128/128/23\u003c/a\u003e", "fish", "🐟");
+    placeMarker([1084+0.5, 1129+0.5], {icon:PIN_12}, "\u003ch4\u003eDegrand\u003c/h4\u003eProduct: tar\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Degrand/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Degrand/128/128/23\u003c/a\u003e", "tar", "🛢️");
+    placeMarker([1080+0.5, 1131+0.5], {icon:PIN_2}, "\u003ch4\u003eGubbio\u003c/h4\u003eProduct: fish\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Gubbio/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Gubbio/128/128/23\u003c/a\u003e", "fish", "🐟");
+    placeMarker([1077+0.5, 1136+0.5], {icon:PIN_3}, "\u003ch4\u003eUrbino\u003c/h4\u003eProduct: shrimps\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Urbino/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Urbino/128/128/23\u003c/a\u003e", "shrimps", "🦐");
+    placeMarker([1062+0.5, 1134+0.5], {icon:PIN_6}, "\u003ch4\u003eCortona\u003c/h4\u003eProduct: timber\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Cortona/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Cortona/128/128/23\u003c/a\u003e", "timber", "🌲");
+    placeMarker([1086+0.5, 1133+0.5], {icon:PIN_14}, "\u003ch4\u003eBinneed\u003c/h4\u003eProduct: tobacco\u003cbr\u003eFaction: The Veiled Meridian\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Binneed/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Binneed/128/128/23\u003c/a\u003e", "tobacco", "🚬");
+    placeMarker([1073+0.5, 1137+0.5], {icon:PIN_15}, "\u003ch4\u003eCividale\u003c/h4\u003eProduct: bricks\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Cividale/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Cividale/128/128/23\u003c/a\u003e", "bricks", "🧱");
+    placeMarker([1082+0.5, 1131+0.5], {icon:PIN_7}, "\u003ch4\u003eGerache\u003c/h4\u003eProduct: squid\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Gerache/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Gerache/128/128/23\u003c/a\u003e", "squid", "🦑");
+    placeMarker([1049+0.5, 1115+0.5], {icon:PIN_2}, "\u003ch4\u003eNimitz\u003c/h4\u003eProduct: fish\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Nimitz/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Nimitz/128/128/23\u003c/a\u003e", "fish", "🐟");
+    placeMarker([1047+0.5, 1105+0.5], {icon:PIN_9}, "\u003ch4\u003eTweendeck\u003c/h4\u003eProduct: hemp\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Tweendeck/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Tweendeck/128/128/23\u003c/a\u003e", "hemp", "🌿");
+    placeMarker([1089+0.5, 1149+0.5], {icon:PIN_1}, "\u003ch4\u003eVenostrate\u003c/h4\u003eProduct: mead\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Venostrate/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Venostrate/128/128/23\u003c/a\u003e", "mead", "🍷");
+    placeMarker([1087+0.5, 1127+0.5], {icon:PIN_4}, "\u003ch4\u003eRooney\u003c/h4\u003eProduct: corn\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Rooney/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Rooney/128/128/23\u003c/a\u003e", "corn", "🌾");
+    placeMarker([1053+0.5, 1126+0.5], {icon:PIN_13}, "\u003ch4\u003eWestbury\u003c/h4\u003eProduct: cloth\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Westbury/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Westbury/128/128/23\u003c/a\u003e", "cloth", "🧵");
+    placeMarker([1059+0.5, 1122+0.5], {icon:PIN_16}, "\u003ch4\u003eKnaptrackicon\u003c/h4\u003eProduct: sake\u003cbr\u003eFaction: The Swan Fleet of Alqualonde\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Knaptrackicon/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Knaptrackicon/128/128/23\u003c/a\u003e", "sake", "🥃");
+    placeMarker([1064+0.5, 1126+0.5], {icon:PIN_17}, "\u003ch4\u003eMinotaur\u003c/h4\u003eProduct: herbs\u003cbr\u003eFaction: Black Dragon\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Minotaur/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Minotaur/128/128/23\u003c/a\u003e", "herbs", "☘️");
+    placeMarker([1067+0.5, 1131+0.5], {icon:PIN_18}, "\u003ch4\u003eHake\u003c/h4\u003eProduct: cocoa\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Hake/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Hake/128/128/23\u003c/a\u003e", "cocoa", "🍫");
+    placeMarker([1074+0.5, 1134+0.5], {icon:PIN_3}, "\u003ch4\u003eHrosskell\u003c/h4\u003eProduct: seafood\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Hrosskell/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Hrosskell/128/128/23\u003c/a\u003e", "seafood", "🦐");
+    placeMarker([1084+0.5, 1145+0.5], {icon:PIN_9}, "\u003ch4\u003eSteine Gardens\u003c/h4\u003eProduct: cotton\u003cbr\u003eFaction: Northwind Sailors\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Steine%20Gardens/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Steine Gardens/128/128/23\u003c/a\u003e", "cotton", "🌿");
+    placeMarker([1052+0.5, 1115+0.5], {icon:PIN_19}, "\u003ch4\u003eQlar Fell\u003c/h4\u003eProduct: coffee\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Qlar%20Fell/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Qlar Fell/128/128/23\u003c/a\u003e", "coffee", "☕");
+    placeMarker([1038+0.5, 1101+0.5], {icon:PIN_4}, "\u003ch4\u003eShoremel\u003c/h4\u003eProduct: rye\u003cbr\u003eFaction: Sirens Coven\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Shoremel/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Shoremel/128/128/23\u003c/a\u003e", "rye", "🌾");
+    placeMarker([1037+0.5, 1134+0.5], {icon:PIN_20}, "\u003ch4\u003ePlaya Del Agua\u003c/h4\u003eProduct: honey\u003cbr\u003eFaction: Naval Winds\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Playa%20Del%20Agua/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Playa Del Agua/128/128/23\u003c/a\u003e", "honey", "🍯");
+    placeMarker([1069+0.5, 1135+0.5], {icon:PIN_3}, "\u003ch4\u003ePledder\u003c/h4\u003eProduct: shrimps\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Pledder/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Pledder/128/128/23\u003c/a\u003e", "shrimps", "🦐");
+    placeMarker([1041+0.5, 1132+0.5], {icon:PIN_21}, "\u003ch4\u003eFernandes\u003c/h4\u003eProduct: wigs\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Fernandes/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Fernandes/128/128/23\u003c/a\u003e", "wigs", "👨🏻‍🦲");
+    placeMarker([1088+0.5, 1150+0.5], {icon:PIN_22}, "\u003ch4\u003eOligard\u003c/h4\u003eProduct: coal\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Oligard/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Oligard/128/128/23\u003c/a\u003e", "coal", "⚒️");
+    placeMarker([1030+0.5, 1099+0.5], {icon:PIN_2}, "\u003ch4\u003eHathor\u003c/h4\u003eProduct: fish\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Hathor/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Hathor/128/128/23\u003c/a\u003e", "fish", "🐟");
+    placeMarker([1024+0.5, 1102+0.5], {icon:PIN_23}, "\u003ch4\u003eChiffre\u003c/h4\u003eProduct: rice\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Chiffre/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Chiffre/128/128/23\u003c/a\u003e", "rice", "🍚");
+    placeMarker([1021+0.5, 1097+0.5], {icon:PIN_8}, "\u003ch4\u003eSriracha\u003c/h4\u003eProduct: clay\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Sriracha/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Sriracha/128/128/23\u003c/a\u003e", "clay", "🏺");
+    placeMarker([1011+0.5, 1097+0.5], {icon:PIN_24}, "\u003ch4\u003eSloop John B\u003c/h4\u003eProduct: fruits\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Sloop%20John%20B/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Sloop John B/128/128/23\u003c/a\u003e", "fruits", "🍎");
+    placeMarker([1006+0.5, 1098+0.5], {icon:PIN_6}, "\u003ch4\u003eBuffalo Springs\u003c/h4\u003eProduct: timber\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Buffalo%20Springs/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Buffalo Springs/128/128/23\u003c/a\u003e", "timber", "🌲");
+    placeMarker([1000+0.5, 1098+0.5], {icon:PIN_10}, "\u003ch4\u003ePigeon Point\u003c/h4\u003eProduct: blubber\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Pigeon%20Point/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Pigeon Point/128/128/23\u003c/a\u003e", "blubber", "🐳");
+    placeMarker([1066+0.5, 1147+0.5], {icon:PIN_25}, "\u003ch4\u003eTreasure Land\u003c/h4\u003eProduct: coconuts\u003cbr\u003eFaction: Valoris Draconis\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Treasure%20Land/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Treasure Land/128/128/23\u003c/a\u003e", "coconuts", "🥥");
+    placeMarker([1065+0.5, 1149+0.5], {icon:PIN_2}, "\u003ch4\u003eAzure 17\u003c/h4\u003eProduct: fish\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Azure%2017/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Azure 17/128/128/23\u003c/a\u003e", "fish", "🐟");
+    placeMarker([1070+0.5, 1146+0.5], {icon:PIN_3}, "\u003ch4\u003eAzure 1\u003c/h4\u003eProduct: shrimps\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Azure%201/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Azure 1/128/128/23\u003c/a\u003e", "shrimps", "🦐");
+    placeMarker([1084+0.5, 1157+0.5], {icon:PIN_26}, "\u003ch4\u003eMordicub\u003c/h4\u003eProduct: oysters\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Mordicub/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Mordicub/128/128/23\u003c/a\u003e", "oysters", "🦪");
+    placeMarker([1047+0.5, 1111+0.5], {icon:PIN_27}, "\u003ch4\u003eAwenhai\u003c/h4\u003eProduct: sugar\u003cbr\u003eFaction: Red Mercy\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Awenhai/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Awenhai/128/128/23\u003c/a\u003e", "sugar", "🍬");
+    placeMarker([1075+0.5, 1139+0.5], {icon:PIN_27}, "\u003ch4\u003eChachee Isle\u003c/h4\u003eProduct: sugar\u003cbr\u003eFaction: Red Mercy\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Chachee%20Isle/128/128/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Chachee Isle/128/128/23\u003c/a\u003e", "sugar", "🍬");
+    placeMarker([(1047 + 216 / 256), (1111 + 47 / 256)], {icon:WARN_0, zIndexOffset:1000}, "\u003ch4\u003ePirate Fortress\u003c/h4\u003eFaction: Red Mercy\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Awenhai/47/216/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Awenhai/47/216/23\u003c/a\u003e", "", "☠️");
+    placeMarker([(1077 + 153.0 / 256), (1139 + 125.0 / 256)], {icon:WARN_1, zIndexOffset:1000}, "\u003ch4\u003eLOW PRIM SIM\u003c/h4\u003eNote: NOT ENOUGH PRIMS TO PASS\u003cbr\u003e\u003ca class=\"slurl\" href=\"secondlife://Chauve%20Soris%20Isle/125/153/23\" title=\"Open in the default Second Life viewer\"\u003eSLurl: Chauve Soris Isle/125/153/23\u003c/a\u003e", "", "");
+
+    // icon is an image url?
+    function isUrl(value) {
+      return new RegExp('^https?://', 'i').test(value || "");
+    }
+
+    // collect products present on the map for the filter
+    function goodsFromMarkers() {
+      const seen = new Map();
+      for (const item of allMarkers) {
+        if (!item.prod) continue;
+        if (!seen.has(item.prod)) {
+          seen.set(item.prod, { name: item.prod, icon: item.icon, count: 0 });
+        }
+        const row = seen.get(item.prod);
+        row.count += 1;
+        if (!row.icon && item.icon) row.icon = item.icon;
+      }
+      return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // tiny icon next to a filter row
+    function iconHtml(icon) {
+      if (!icon) return "";
+      if (isUrl(icon)) return '<img src="' + icon.replace(/"/g, "&quot;") + '" alt="">';
+      return icon;
+    }
+
+    const goods = goodsFromMarkers();
+    const listEl = document.getElementById("filter-list");
+    const selected = new Set(goods.map((g) => g.name));
+
+    // draw the goods checkboxes
+    function renderList() {
+      listEl.innerHTML = goods.map((g) => {
+        const id = "good-" + encodeURIComponent(g.name);
+        const checked = selected.has(g.name) ? " checked" : "";
+        return '<label class="filter-item" for="' + id + '">'
+          + '<input type="checkbox" id="' + id + '" data-good="' + g.name.replace(/"/g, "&quot;") + '"' + checked + '>'
+          + '<span class="filter-ico">' + iconHtml(g.icon) + '</span>'
+          + '<span class="filter-name">' + g.name + '</span>'
+          + '<span class="filter-count">' + g.count + '</span>'
+          + '</label>';
+      }).join("");
+    }
+
+    // hide unchecked goods — empty product always stays
+    function applyFilter() {
+      let visible = 0;
+      for (const item of allMarkers) {
+        const show = !item.prod || selected.has(item.prod);
+        // no product → always on
+        if (show) {
+          if (!item.visible) {
+            item.marker.addTo(map);
+            item.visible = true;
+          }
+          visible += 1;
+        } else if (item.visible) {
+          map.removeLayer(item.marker);
+          item.visible = false;
+        }
+      }
+      document.getElementById("hint").textContent = hintBase + " · showing " + visible + "/" + allMarkers.length;
+    }
+
+    listEl.addEventListener("change", (ev) => {
+      const box = ev.target;
+      if (!box || !box.matches("input[type=checkbox][data-good]")) return;
+      if (box.checked) selected.add(box.getAttribute("data-good"));
+      else selected.delete(box.getAttribute("data-good"));
+      applyFilter();
+    });
+
+    document.getElementById("filter-all").addEventListener("click", () => {
+      goods.forEach((g) => selected.add(g.name));
+      renderList();
+      applyFilter();
+    });
+
+    document.getElementById("filter-none").addEventListener("click", () => {
+      selected.clear();
+      renderList();
+      applyFilter();
+    });
+
+    document.getElementById("filter-toggle").addEventListener("click", () => {
+      const panel = document.getElementById("filter-panel");
+      const btn = document.getElementById("filter-toggle");
+      const collapsed = panel.classList.toggle("collapsed");
+      btn.textContent = collapsed ? "show" : "hide";
+      btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    });
+
+    renderList();
+    applyFilter();
+
+    document.addEventListener("click", (ev) => {
+      const link = ev.target && ev.target.closest ? ev.target.closest("a.slurl") : null;
+      if (!link) return;
+      const href = link.getAttribute("href") || "";
+      if (!href.toLowerCase().startsWith("secondlife:")) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      window.location.href = href;
+    }, true);
+
+    const USER_PIN_MAX = 12;
+    const PIN_COOKIE = 'wigwars_pins';
+    const userPins = [];
+    let pinMode = false;
+    let pendingPin = null;
+    const userPinIcon = L.divIcon({
+      className: 'emo-marker',
+      html: '<div class="user-pin"></div>',
+      iconSize: [18, 18],
+      iconAnchor: [9, 18]
+    });
+    let previewMarker = null;
+
+    // escape text before stuffing it in popup html
+    function pinEsc(s) {
+      return String(s || '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    // ~ is our field separator, don't let it into titles
+    function cleanPinText(s) {
+      return String(s || '').replace(/~/g, ' ').trim().replace(/  +/g, ' ');
+    }
+
+    // one pin as x*100~y*100~title~note~region
+    function pinToken(item) {
+      const x = Math.round(Number(item.x) * 100);
+      // integers are shorter in the url
+      const y = Math.round(Number(item.y) * 100);
+      return [
+        x, y,
+        cleanPinText(item.title || 'Pin'),
+        cleanPinText(item.note),
+        cleanPinText(item.region)
+      ].join('~');
+    }
+
+    // grid point → in-sim local 0-256, same as a colony landing
+    function pinLocal(item) {
+      const gx = Math.floor(Number(item.x));
+      const gy = Math.floor(Number(item.y));
+      return {
+        gx: gx,
+        gy: gy,
+        lx: Math.round((Number(item.x) - gx) * 256),
+        ly: Math.round((Number(item.y) - gy) * 256),
+        lz: 23
+      };
+    }
+
+    function pinSlurl(item) {
+      if (!item.region) return '';
+      const loc = pinLocal(item);
+      const path = encodeURIComponent(item.region).replace(/%20/g, '%20');
+      return 'secondlife://' + path + '/' + loc.lx + '/' + loc.ly + '/' + loc.lz;
+    }
+
+    function pinSlurlLabel(item) {
+      if (!item.region) return '';
+      const loc = pinLocal(item);
+      return item.region + '/' + loc.lx + '/' + loc.ly + '/' + loc.lz;
+    }
+
+    // official SL map cap: script tag, not fetch (no CORS)
+    const regionCache = {};
+    let regionQueue = Promise.resolve();
+    function lookupRegionName(gx, gy) {
+      const key = gx + ',' + gy;
+      if (regionCache[key]) return Promise.resolve(regionCache[key]);
+      return regionQueue = regionQueue.then(function () {
+        return new Promise(function (resolve) {
+          const url = 'https://cap.secondlife.com/cap/0/b713fe80-283b-4585-af4d-a3b7d9a32492'
+            + '?var=slRegionName&grid_x=' + gx + '&grid_y=' + gy;
+          const s = document.createElement('script');
+          const finish = function (name) {
+            if (name) regionCache[key] = name;
+            s.remove();
+            resolve(name || '');
+          };
+          s.onload = function () {
+            const name = (typeof slRegionName === 'string') ? slRegionName : '';
+            finish(name);
+          };
+          s.onerror = function () { finish(''); };
+          s.src = url;
+          document.head.appendChild(s);
+        });
+      });
+    }
+
+    function attachPinSlurl(item) {
+      if (item.region) {
+        if (item.marker) item.marker.setPopupContent(pinPopup(item));
+        return Promise.resolve(item.region);
+      }
+      const loc = pinLocal(item);
+      return lookupRegionName(loc.gx, loc.gy).then(function (name) {
+        if (!name) return '';
+        item.region = name;
+        if (item.marker) item.marker.setPopupContent(pinPopup(item));
+        return name;
+      });
+    }
+
+    // join pins with ! for the cookie / url
+    function compactPayload(list) {
+      return (list || userPins).map(pinToken).join('!');
+    }
+
+    // base64, url-safe (no + / =)
+    function b64urlEncode(str) {
+      const raw = unescape(encodeURIComponent(str));
+      return btoa(raw).replace(/[+]/g, '-').replace(/[/]/g, '_').replace(/=+$/g, '');
+    }
+
+    // undo that, pad if needed
+    function b64urlDecode(str) {
+      let s = String(str || '').replace(/-/g, '+').replace(/_/g, '/');
+      while (s.length % 4) s += '=';
+      // atob wants padding we stripped on encode
+      try { return decodeURIComponent(escape(atob(s))); } catch (err) { return ''; }
+    }
+
+    // split a packed pin back into x/y/title/note
+    function parsePinToken(raw) {
+      const parts = String(raw || '').split('~');
+      if (parts.length < 2) return null;
+      let x = parseFloat(parts[0]);
+      let y = parseFloat(parts[1]);
+      if (!isFinite(x) || !isFinite(y)) return null;
+      if (Math.abs(x) > 4000 || Math.abs(y) > 4000) {
+      // packed coords are *100; raw grid is ~1000-1200
+        x = x / 100;
+        y = y / 100;
+      }
+      return {
+        x: x,
+        y: y,
+        title: cleanPinText(parts[2] || 'Pin') || 'Pin',
+        note: cleanPinText(parts[3] || ''),
+        region: cleanPinText(parts[4] || '')
+      };
+    }
+
+    // cookie first, localStorage if cookies are blocked (file://)
+    function readCookiePayload() {
+      let raw = '';
+      const bits = document.cookie.split(';');
+      for (let i = 0; i < bits.length; i++) {
+        const row = bits[i].trim();
+        if (row.indexOf(PIN_COOKIE + '=') === 0) {
+          raw = decodeURIComponent(row.slice(PIN_COOKIE.length + 1));
+          break;
+        }
+      }
+      if (!raw) {
+        try { raw = localStorage.getItem(PIN_COOKIE) || ''; } catch (err) {}
+        // file:// often blocks cookies
+      }
+      return raw;
+    }
+
+    // keep cookie and localStorage in sync
+    function writeCookiePayload(payload) {
+      document.cookie = PIN_COOKIE + '=' + encodeURIComponent(payload || '')
+        + '; max-age=31536000; path=/; SameSite=Lax';
+      try { localStorage.setItem(PIN_COOKIE, payload || ''); } catch (err) {}
+    }
+
+    // save current pins to cookie
+    function persistPins() {
+      writeCookiePayload(compactPayload());
+    }
+
+    // build ?u= from a packed payload
+    function shareUrlFromPayload(payload) {
+      const url = new URL(location.href);
+      url.searchParams.delete('p');
+      url.searchParams.delete('pins');
+      url.searchParams.delete('u');
+      if (payload) url.searchParams.set('u', b64urlEncode(payload));
+      return url.toString();
+    }
+
+    // share link for whatever is on the map now
+    function shareUrl() {
+      return shareUrlFromPayload(compactPayload());
+    }
+
+    // wipe cookie + localStorage
+    function clearStoredPins() {
+      document.cookie = PIN_COOKIE + '=; max-age=0; path=/; SameSite=Lax';
+      try { localStorage.removeItem(PIN_COOKIE); } catch (err) {}
+    }
+
+    // rewrite the address bar without reloading
+    function syncPinUrl() {
+      if (!window.history || !history.replaceState) return;
+      try { history.replaceState(null, '', shareUrl()); } catch (err) {}
+    }
+
+    // cookie + address bar
+    function savePins() {
+      persistPins();
+      syncPinUrl();
+    }
+
+    // popup for a user pin, with remove
+    function pinPopup(item) {
+      const sl = pinSlurl(item);
+      const slLabel = pinSlurlLabel(item);
+      return '<h4>' + pinEsc(item.title) + '</h4>'
+        + (item.note ? pinEsc(item.note) + '<br>' : '')
+        + (sl
+          ? '<a class="slurl" href="' + pinEsc(sl) + '" title="Open in the default Second Life viewer">SLurl: ' + pinEsc(slLabel) + '</a>'
+          : '')
+        + '<hr class="pin-sep">'
+        + '<button type="button" class="pin-del" data-pin="' + pinEsc(item.id) + '">Remove</button>';
+    }
+
+    // list under the share panel
+    function renderPinList() {
+      const box = document.getElementById('pin-list');
+      const urlBox = document.getElementById('pin-url');
+      if (urlBox) urlBox.value = userPins.length ? shareUrl() : '';
+      if (!userPins.length) {
+        box.innerHTML = '';
+        return;
+      }
+      box.innerHTML = userPins.map((item) => {
+        return '<div class="pin-row" data-focus="' + pinEsc(item.id) + '"><span>' + pinEsc(item.title) + '</span>'
+          + '<button type="button" class="pin-del" data-pin="' + pinEsc(item.id) + '">x</button></div>';
+      }).join('');
+    }
+
+    // take one user pin off the map
+    function removeUserPin(id) {
+      const idx = userPins.findIndex((item) => item.id === id);
+      if (idx < 0) return;
+      const gone = userPins.splice(idx, 1)[0];
+      if (gone.marker) map.removeLayer(gone.marker);
+      renderPinList();
+      savePins();
+    }
+
+    // place a user pin (and save unless told not to)
+    function addUserPin(data, sync) {
+      if (userPins.length >= USER_PIN_MAX) {
+        document.getElementById('pin-status').textContent = 'Share the url';
+        return null;
+      }
+      const item = {
+        id: 'u' + Date.now().toString(36) + Math.floor(Math.random() * 1000).toString(36),
+        x: Number(data.x),
+        y: Number(data.y),
+        title: cleanPinText(data.title) || 'Pin',
+        note: cleanPinText(data.note),
+        region: cleanPinText(data.region)
+      };
+      item.marker = L.marker([item.y, item.x], { icon: userPinIcon, zIndexOffset: 1200 })
+      // same [y,x] order as the sl map
+        .addTo(map)
+        .bindPopup(pinPopup(item));
+      userPins.push(item);
+      renderPinList();
+      attachPinSlurl(item).then(function () {
+        if (sync !== false) savePins();
+        else if (item.region) renderPinList();
+      });
+      if (sync !== false) savePins();
+      return item;
+    }
+
+    // ?u= wins and overwrites the cookie, else restore cookie
+    function loadUserPins() {
+      const compact = new URLSearchParams(location.search).get('u');
+      let payload = '';
+      if (compact) {
+        payload = b64urlDecode(compact);
+        writeCookiePayload(payload);
+        // incoming share link becomes the new local set
+      } else {
+        payload = readCookiePayload();
+      }
+      payload.split('!').filter(Boolean).slice(0, USER_PIN_MAX).forEach((raw) => {
+        const parsed = parsePinToken(raw);
+        if (parsed) addUserPin(parsed, false);
+      });
+      savePins();
+      renderPinList();
+    }
+
+    // waiting for a map click to drop a pin
+    function setPinMode(on) {
+      pinMode = !!on;
+      document.getElementById('pin-add').classList.toggle('active', pinMode);
+      document.getElementById('pin-add').textContent = pinMode ? 'Click the map…' : 'Add marker';
+      const el = map.getContainer();
+      el.classList.toggle('pinning', pinMode);
+      if (!pinMode && previewMarker) {
+        map.removeLayer(previewMarker);
+        previewMarker = null;
+      }
+    }
+
+    // ask for title/note after the click
+    function openPinModal(latlng) {
+      pendingPin = latlng;
+      document.getElementById('pin-coords').textContent =
+        'x ' + latlng.lng.toFixed(3) + '  ·  y ' + latlng.lat.toFixed(3);
+      document.getElementById('pin-title').value = '';
+      document.getElementById('pin-note').value = '';
+      document.getElementById('pin-modal').classList.add('on');
+      document.getElementById('pin-title').focus();
+    }
+
+    // cancel add-pin
+    function closePinModal() {
+      document.getElementById('pin-modal').classList.remove('on');
+      pendingPin = null;
+    }
+
+    document.getElementById('pin-add').addEventListener('click', () => {
+      if (userPins.length >= USER_PIN_MAX) {
+        document.getElementById('pin-status').textContent = 'Share the url';
+        return;
+      }
+      setPinMode(!pinMode);
+    });
+    document.getElementById('pin-cancel').addEventListener('click', () => {
+      closePinModal();
+      setPinMode(false);
+    });
+    document.getElementById('pin-save').addEventListener('click', () => {
+      if (!pendingPin) return;
+      addUserPin({
+        x: pendingPin.lng,
+        y: pendingPin.lat,
+        title: document.getElementById('pin-title').value,
+        note: document.getElementById('pin-note').value
+      });
+      closePinModal();
+      setPinMode(false);
+    });
+    document.getElementById('pin-reset').addEventListener('click', () => {
+      while (userPins.length) {
+        const gone = userPins.pop();
+        if (gone.marker) map.removeLayer(gone.marker);
+      }
+      clearStoredPins();
+      syncPinUrl();
+      renderPinList();
+      document.getElementById('pin-status').textContent = 'Share the url';
+      setPinMode(false);
+    });
+    document.getElementById('pin-copy').addEventListener('click', async () => {
+      persistPins();
+      const payload = readCookiePayload();
+      if (!payload) {
+        document.getElementById('pin-status').textContent = 'Share the url';
+        const emptyBox = document.getElementById('pin-url');
+        if (emptyBox) emptyBox.value = '';
+        return;
+      }
+      const url = shareUrlFromPayload(payload);
+      syncPinUrl();
+      const urlBox = document.getElementById('pin-url');
+      if (urlBox) {
+        urlBox.value = url;
+        urlBox.focus();
+        urlBox.select();
+      }
+      try {
+        await navigator.clipboard.writeText(url);
+        document.getElementById('pin-status').textContent = 'Share url copied';
+      } catch (err) {
+        window.prompt('Copy this share URL', url);
+      }
+    });
+    function focusUserPin(id) {
+      const item = userPins.find((p) => p.id === id);
+      if (!item || !item.marker) return;
+      const z = map.getZoom ? map.getZoom() : 3;
+      map.setView([item.y, item.x], Math.max(z, 6));
+      item.marker.openPopup();
+    }
+
+    document.getElementById('share-panel').addEventListener('click', (ev) => {
+      const btn = ev.target.closest ? ev.target.closest('button.pin-del') : null;
+      if (btn) {
+        removeUserPin(btn.getAttribute('data-pin'));
+        return;
+      }
+      const row = ev.target.closest ? ev.target.closest('.pin-row') : null;
+      if (row) focusUserPin(row.getAttribute('data-focus'));
+    });
+    document.addEventListener('click', (ev) => {
+      const btn = ev.target.closest ? ev.target.closest('button.pin-del') : null;
+      if (!btn) return;
+      removeUserPin(btn.getAttribute('data-pin'));
+    });
+    map.on('mousemove', (ev) => {
+      if (!pinMode || pendingPin || !ev || !ev.latlng) return;
+      if (!previewMarker) {
+        previewMarker = L.marker(ev.latlng, {
+          icon: userPinIcon, zIndexOffset: 2000, opacity: 0.75, interactive: false
+        }).addTo(map);
+      } else {
+        previewMarker.setLatLng(ev.latlng);
+      }
+    });
+    map.on('click', (ev) => {
+      if (!pinMode || pendingPin || !ev || !ev.latlng) return;
+      if (previewMarker) previewMarker.setLatLng(ev.latlng);
+      openPinModal(ev.latlng);
+    });
+
+    loadUserPins();
+
+  </script>
+</body>
+</html>

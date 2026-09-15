@@ -1,0 +1,514 @@
+{
+  "center": [
+    1062,
+    1128
+  ],
+  "zoom": 3,
+  "colonies": [
+    {
+      "name": "Wicktro",
+      "x": 1134,
+      "y": 1056,
+      "prod": "wine",
+      "faction": "",
+      "icon": "🍷",
+      "note": ""
+    },
+    {
+      "name": "Blake Sea - Sirens Isle",
+      "x": 1135,
+      "y": 1048,
+      "prod": "fish",
+      "faction": "",
+      "icon": "🐟",
+      "note": ""
+    },
+    {
+      "name": "Blake Sea - Half Hitch",
+      "x": 1133,
+      "y": 1050,
+      "prod": "shrimps",
+      "faction": "",
+      "icon": "🦐",
+      "note": ""
+    },
+    {
+      "name": "Blake Sea - Windlass",
+      "x": 1133,
+      "y": 1048,
+      "prod": "wheat",
+      "faction": "",
+      "icon": "🌾",
+      "note": ""
+    },
+    {
+      "name": "Nautilus - Byth",
+      "x": 1131,
+      "y": 1049,
+      "prod": "metals",
+      "faction": "",
+      "icon": "🔩",
+      "note": ""
+    },
+    {
+      "name": "Blake Sea - Spyglass",
+      "x": 1133,
+      "y": 1053,
+      "prod": "timber",
+      "faction": "",
+      "icon": "🌲",
+      "note": ""
+    },
+    {
+      "name": "Blake Sea - Crows Nest",
+      "x": 1136,
+      "y": 1051,
+      "prod": "squid",
+      "faction": "",
+      "icon": "🦑",
+      "note": ""
+    },
+    {
+      "name": "Nautilus - Yamm",
+      "x": 1122,
+      "y": 1048,
+      "prod": "pottery",
+      "faction": "The Honourable EIC",
+      "icon": "🏺",
+      "note": ""
+    },
+    {
+      "name": "Howe",
+      "x": 1123,
+      "y": 1046,
+      "prod": "hemp",
+      "faction": "",
+      "icon": "🌿",
+      "note": ""
+    },
+    {
+      "name": "Ahab's Haunt",
+      "x": 1128,
+      "y": 1062,
+      "prod": "blubber",
+      "faction": "",
+      "icon": "🐳",
+      "note": ""
+    },
+    {
+      "name": "Skradski",
+      "x": 1134,
+      "y": 1060,
+      "prod": "salt",
+      "faction": "",
+      "icon": "🧂",
+      "note": ""
+    },
+    {
+      "name": "Valenza",
+      "x": 1137,
+      "y": 1075,
+      "prod": "porcelain",
+      "faction": "",
+      "icon": "🏺",
+      "note": ""
+    },
+    {
+      "name": "Kingpost",
+      "x": 1100,
+      "y": 1037,
+      "prod": "rum",
+      "faction": "",
+      "icon": "🍷",
+      "note": ""
+    },
+    {
+      "name": "Tuulikki",
+      "x": 1100,
+      "y": 1034,
+      "prod": "squid",
+      "faction": "",
+      "icon": "🦑",
+      "note": ""
+    },
+    {
+      "name": "Wardroom",
+      "x": 1100,
+      "y": 1041,
+      "prod": "shrimps",
+      "faction": "",
+      "icon": "🦐",
+      "note": ""
+    },
+    {
+      "name": "Gunport",
+      "x": 1101,
+      "y": 1043,
+      "prod": "tar",
+      "faction": "",
+      "icon": "🛢️",
+      "note": ""
+    },
+    {
+      "name": "Tonar",
+      "x": 1102,
+      "y": 1045,
+      "prod": "silk",
+      "faction": "",
+      "icon": "🧵",
+      "note": ""
+    },
+    {
+      "name": "Orlop",
+      "x": 1103,
+      "y": 1046,
+      "prod": "fish",
+      "faction": "",
+      "icon": "🐟",
+      "note": ""
+    },
+    {
+      "name": "Degrand",
+      "x": 1129,
+      "y": 1084,
+      "prod": "tar",
+      "faction": "",
+      "icon": "🛢️",
+      "note": ""
+    },
+    {
+      "name": "Gubbio",
+      "x": 1131,
+      "y": 1080,
+      "prod": "fish",
+      "faction": "",
+      "icon": "🐟",
+      "note": ""
+    },
+    {
+      "name": "Urbino",
+      "x": 1136,
+      "y": 1077,
+      "prod": "shrimps",
+      "faction": "",
+      "icon": "🦐",
+      "note": ""
+    },
+    {
+      "name": "Cortona",
+      "x": 1134,
+      "y": 1062,
+      "prod": "timber",
+      "faction": "",
+      "icon": "🌲",
+      "note": ""
+    },
+    {
+      "name": "Binneed",
+      "x": 1133,
+      "y": 1086,
+      "prod": "tobacco",
+      "faction": "The Veiled Meridian",
+      "icon": "🚬",
+      "note": ""
+    },
+    {
+      "name": "Cividale",
+      "x": 1137,
+      "y": 1073,
+      "prod": "bricks",
+      "faction": "",
+      "icon": "🧱",
+      "note": ""
+    },
+    {
+      "name": "Gerache",
+      "x": 1131,
+      "y": 1082,
+      "prod": "squid",
+      "faction": "",
+      "icon": "🦑",
+      "note": ""
+    },
+    {
+      "name": "Nimitz",
+      "x": 1115,
+      "y": 1049,
+      "prod": "fish",
+      "faction": "",
+      "icon": "🐟",
+      "note": ""
+    },
+    {
+      "name": "Tweendeck",
+      "x": 1105,
+      "y": 1047,
+      "prod": "hemp",
+      "faction": "",
+      "icon": "🌿",
+      "note": ""
+    },
+    {
+      "name": "Venostrate",
+      "x": 1149,
+      "y": 1089,
+      "prod": "mead",
+      "faction": "",
+      "icon": "🍷",
+      "note": ""
+    },
+    {
+      "name": "Rooney",
+      "x": 1127,
+      "y": 1087,
+      "prod": "corn",
+      "faction": "",
+      "icon": "🌾",
+      "note": ""
+    },
+    {
+      "name": "Westbury",
+      "x": 1126,
+      "y": 1053,
+      "prod": "cloth",
+      "faction": "",
+      "icon": "🧵",
+      "note": ""
+    },
+    {
+      "name": "Knaptrackicon",
+      "x": 1122,
+      "y": 1059,
+      "prod": "sake",
+      "faction": "The Swan Fleet of Alqualonde",
+      "icon": "🥃",
+      "note": ""
+    },
+    {
+      "name": "Minotaur",
+      "x": 1126,
+      "y": 1064,
+      "prod": "herbs",
+      "faction": "Black Dragon",
+      "icon": "☘️",
+      "note": ""
+    },
+    {
+      "name": "Hake",
+      "x": 1131,
+      "y": 1067,
+      "prod": "cocoa",
+      "faction": "",
+      "icon": "🍫",
+      "note": ""
+    },
+    {
+      "name": "Hrosskell",
+      "x": 1134,
+      "y": 1074,
+      "prod": "seafood",
+      "faction": "",
+      "icon": "🦐",
+      "note": ""
+    },
+    {
+      "name": "Steine Gardens",
+      "x": 1145,
+      "y": 1084,
+      "prod": "cotton",
+      "faction": "Northwind Sailors",
+      "icon": "🌿",
+      "note": ""
+    },
+    {
+      "name": "Qlar Fell",
+      "x": 1115,
+      "y": 1052,
+      "prod": "coffee",
+      "faction": "",
+      "icon": "☕",
+      "note": ""
+    },
+    {
+      "name": "Shoremel",
+      "x": 1101,
+      "y": 1038,
+      "prod": "rye",
+      "faction": "Sirens Coven",
+      "icon": "🌾",
+      "note": ""
+    },
+    {
+      "name": "Playa Del Agua",
+      "x": 1134,
+      "y": 1037,
+      "prod": "honey",
+      "faction": "Naval Winds",
+      "icon": "🍯",
+      "note": ""
+    },
+    {
+      "name": "Pledder",
+      "x": 1135,
+      "y": 1069,
+      "prod": "shrimps",
+      "faction": "",
+      "icon": "🦐",
+      "note": ""
+    },
+    {
+      "name": "Fernandes",
+      "x": 1132,
+      "y": 1041,
+      "prod": "wigs",
+      "faction": "",
+      "icon": "👨🏻‍🦲",
+      "note": ""
+    },
+    {
+      "name": "Oligard",
+      "x": 1150,
+      "y": 1088,
+      "prod": "coal",
+      "faction": "",
+      "icon": "⚒️",
+      "note": ""
+    },
+    {
+      "name": "Hathor",
+      "x": 1099,
+      "y": 1030,
+      "prod": "fish",
+      "faction": "",
+      "icon": "🐟",
+      "note": ""
+    },
+    {
+      "name": "Chiffre",
+      "x": 1102,
+      "y": 1024,
+      "prod": "rice",
+      "faction": "",
+      "icon": "🍚",
+      "note": ""
+    },
+    {
+      "name": "Sriracha",
+      "x": 1097,
+      "y": 1021,
+      "prod": "clay",
+      "faction": "",
+      "icon": "🏺",
+      "note": ""
+    },
+    {
+      "name": "Sloop John B",
+      "x": 1097,
+      "y": 1011,
+      "prod": "fruits",
+      "faction": "",
+      "icon": "🍎",
+      "note": ""
+    },
+    {
+      "name": "Buffalo Springs",
+      "x": 1098,
+      "y": 1006,
+      "prod": "timber",
+      "faction": "",
+      "icon": "🌲",
+      "note": ""
+    },
+    {
+      "name": "Pigeon Point",
+      "x": 1098,
+      "y": 1000,
+      "prod": "blubber",
+      "faction": "",
+      "icon": "🐳",
+      "note": ""
+    },
+    {
+      "name": "Treasure Land",
+      "x": 1147,
+      "y": 1066,
+      "prod": "coconuts",
+      "faction": "Valoris Draconis",
+      "icon": "🥥",
+      "note": ""
+    },
+    {
+      "name": "Azure 17",
+      "x": 1149,
+      "y": 1065,
+      "prod": "fish",
+      "faction": "",
+      "icon": "🐟",
+      "note": ""
+    },
+    {
+      "name": "Azure 1",
+      "x": 1146,
+      "y": 1070,
+      "prod": "shrimps",
+      "faction": "",
+      "icon": "🦐",
+      "note": ""
+    },
+    {
+      "name": "Mordicub",
+      "x": 1157,
+      "y": 1084,
+      "prod": "oysters",
+      "faction": "",
+      "icon": "🦪",
+      "note": ""
+    },
+    {
+      "name": "Awenhai",
+      "x": 1111,
+      "y": 1047,
+      "prod": "sugar",
+      "faction": "Red Mercy",
+      "icon": "🍬",
+      "note": ""
+    },
+    {
+      "name": "Chachee Isle",
+      "x": 1139,
+      "y": 1075,
+      "prod": "sugar",
+      "faction": "Red Mercy",
+      "icon": "🍬",
+      "note": ""
+    }
+  ],
+  "specials": [
+    {
+      "name": "Pirate Fortress",
+      "region": "Awenhai",
+      "x": 1111,
+      "y": 1047,
+      "local_x": 47,
+      "local_y": 216,
+      "local_z": 23,
+      "prod": "",
+      "faction": "Red Mercy",
+      "note": "",
+      "icon": "☠️"
+    },
+    {
+      "name": "LOW PRIM SIM",
+      "region": "Chauve Soris Isle",
+      "x": 1139,
+      "y": 1077,
+      "local_x": 125.0,
+      "local_y": 153.0,
+      "local_z": 23.0,
+      "prod": "",
+      "faction": "",
+      "note": "NOT ENOUGH PRIMS TO PASS",
+      "icon": ""
+    }
+  ]
+}
