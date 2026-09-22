@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Images</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1.5rem; background: #111; color: #eee; }
+    h1 { font-weight: 600; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    a.card { display: block; background: #1c1c1c; border-radius: 8px; overflow: hidden; color: inherit; text-decoration: none; }
+    img { width: 100%; height: 180px; object-fit: cover; display: block; background: #222; }
+    .name { padding: .6rem .7rem; font-size: .85rem; word-break: break-all; }
+  </style>
+</head>
+<body>
+  <h1>Images</h1>
+  <div class="grid" id="grid">Loading…</div>
+  <script>
+    const USER = 'Melissa-melis';
+    const REPO = 'wigwars_map';
+    const FOLDER = 'images';
+    const api = `https://api.github.com/repos/${USER}/${REPO}/contents/${FOLDER}`;
+    const ok = /\.(jpe?g|png|gif|webp|svg|avif)$/i;
+
+    fetch(api)
+      .then(r => r.json())
+      .then(files => {
+        const grid = document.getElementById('grid');
+        const pics = (Array.isArray(files) ? files : [])
+          .filter(f => f.type === 'file' && ok.test(f.name));
+        if (!pics.length) {
+          grid.textContent = 'No images found.';
+          return;
+        }
+        grid.innerHTML = pics.map(f => `
+          <a class="card" href="${f.name}">
+            <img src="${f.name}" alt="${f.name}">
+            <div class="name">${f.name}</div>
+          </a>`).join('');
+      })
+      .catch(() => {
+        document.getElementById('grid').textContent =
+          'Could not list folder (repo must be public).';
+      });
+  </script>
+</body>
+</html>
