@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stories</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1.5rem auto; max-width: 42rem; background: #111; color: #eee; }
+    h1 { font-weight: 600; }
+    .card { display: block; background: #1c1c1c; border-radius: 10px; padding: 1rem 1.1rem; margin: 0 0 1rem; color: inherit; text-decoration: none; }
+    .card:hover { background: #252525; }
+    .title { font-size: 1.15rem; font-weight: 600; margin: 0 0 .35rem; }
+    .desc { margin: 0 0 .7rem; color: #bbb; line-height: 1.4; }
+    .link { font-size: .9rem; color: #8ab4ff; }
+  </style>
+</head>
+<body>
+  <h1>Stories</h1>
+  <div id="list">Loading…</div>
+  <script>
+    fetch('stories.json')
+      .then(r => r.json())
+      .then(items => {
+        document.getElementById('list').innerHTML = items.map(s => `
+          <a class="card" href="${s.file}">
+            <div class="title">${s.title}</div>
+            <p class="desc">${s.description}</p>
+            <span class="link">Open PDF →</span>
+          </a>`).join('');
+      })
+      .catch(() => {
+        document.getElementById('list').textContent = 'Could not load stories.json';
+      });
+  </script>
+</body>
+</html>
