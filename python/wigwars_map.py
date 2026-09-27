@@ -525,6 +525,59 @@ FILTER_HTML_TEMPLATE = """<!DOCTYPE html>
     .disclaimer {
       color: #ccc; font-size: 11px;
     }
+    .story-ad {
+      position: relative;
+      display: block;
+      text-decoration: none;
+      color: #fff4dc;
+      background:
+        radial-gradient(120% 80% at 100% 0%, rgba(226, 177, 90, .28), transparent 55%),
+        linear-gradient(180deg, #4a2a12 0%, #241408 100%);
+      border: 1px solid #e2b15a;
+      border-radius: 10px;
+      padding: 10px 42px 11px 12px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.4);
+    }
+    .story-ad:hover, .story-ad:focus-visible {
+      border-color: #ffe0a0;
+      outline: none;
+      box-shadow: 0 10px 24px rgba(0,0,0,.5), 0 0 0 2px rgba(226, 177, 90, .35);
+    }
+    .story-mark {
+      position: absolute; right: 12px; top: 10px;
+      font-size: 22px; line-height: 1; opacity: .6;
+    }
+    .story-kicker {
+      display: block;
+      font: 700 10px/1.2 system-ui, sans-serif;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #e8c27a;
+    }
+    .story-title {
+      display: block;
+      margin-top: 2px;
+      font: 700 16px/1.25 Georgia, "Palatino Linotype", Palatino, serif;
+      color: #fff8ea;
+    }
+    .story-blurb {
+      display: block;
+      margin-top: 4px;
+      font: 12px/1.4 system-ui, sans-serif;
+      color: #f3ddb6;
+    }
+    .story-cta {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #e2b15a;
+      color: #2a1608;
+      font: 700 12px/1 system-ui, sans-serif;
+    }
+    .story-ad:hover .story-cta, .story-ad:focus-visible .story-cta {
+      background: #ffd98a;
+    }
     .filter-panel {
       position: absolute; z-index: 1000; top: 12px; right: 12px;
       width: min(260px, calc(100% - 24px));
@@ -609,6 +662,12 @@ FILTER_HTML_TEMPLATE = """<!DOCTYPE html>
       color: #111; font: 700 13px/1 system-ui, sans-serif;
       padding-bottom: 3px;
     }
+    @media (max-width: 780px) {
+      .filter-panel { width: min(240px, 42vw); }
+      .left-stack { width: calc(100% - 42vw - 36px); }
+      .story-title { font-size: 14px; }
+      .story-blurb { font-size: 11px; }
+    }
   </style>
 </head>
 <body>
@@ -616,6 +675,13 @@ FILTER_HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="hint" id="hint">@@HINT@@</div>
   <div class="left-stack">
   <div class="disclaimer">This map is provided as is, without any guarantee, and is not affiliated with WigWars or N+K products. For any questions or update requests, please contact me in-world: Mélissa (melis).</div>
+  <a class="story-ad" href="../stories/index.html">
+    <span class="story-mark" aria-hidden="true">☠</span>
+    <span class="story-kicker">Pirate short stories</span>
+    <strong class="story-title">The Buccaneer of the Turtle</strong>
+    <span class="story-blurb">Tortuga, 1667. A captain, a thirsty crew, and a prize worth leaving the tavern for. English &amp; français.</span>
+    <span class="story-cta">Read the tales →</span>
+  </a>
   </div>
   <aside class="filter-panel" id="filter-panel">
     <div class="filter-head">
