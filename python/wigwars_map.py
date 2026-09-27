@@ -175,14 +175,6 @@ def slurl_of(region: str, lx, ly, lz) -> str:
     )
 
 
-# human readable Region/x/y/z for the popup
-def slurl_label(region: str, lx, ly, lz) -> str:
-    return (
-        f"{(region or '').strip()}/"
-        f"{int(float(lx))}/{int(float(ly))}/{int(float(lz))}"
-    )
-
-
 # make a string safe to drop inside generated JS
 def js_escape(text: str) -> str:
     return (
@@ -415,21 +407,16 @@ def popup_html(
     title: str,
     rows: list[tuple[str, str]],
     slurl: str = "",
-    slurl_text: str = "",
 ) -> str:
     parts = [f"<h4>{js_escape(title)}</h4>"]
     for label, value in rows:
         if value:
             parts.append(f"{js_escape(label)}: {js_escape(value)}<br>")
     if slurl:
-        label = slurl_text or slurl
         parts.append(
             '<a class="slurl" href="'
             + js_escape(slurl)
-            + '" title="Open in the default Second Life viewer">'
-            + "SLurl: "
-            + js_escape(label)
-            + "</a>"
+            + '" title="Open in Second Life">Open in Second Life</a>'
         )
     return "".join(parts)
 
@@ -459,9 +446,8 @@ def generate_html(data: dict) -> None:
         pop = popup_html(
             region,
             [("Product", c.get("prod") or ""), ("Faction", c.get("faction") or ""), ("Note", c.get("note") or "")],
-            slurl_of(region, 128, 128, 23),
             # colony = region center, not a specific landing point
-            slurl_label(region, 128, 128, 23),
+            slurl_of(region, 128, 128, 23),
         )
         prod = js_escape((c.get("prod") or "").strip())
         icon = js_escape((c.get("icon") or "").strip())
@@ -477,7 +463,6 @@ def generate_html(data: dict) -> None:
         my = f"({s['y']} + {s['local_y']} / 256)"
         region = s.get("region") or s.get("name", "")
         sl = slurl_of(region, s["local_x"], s["local_y"], s.get("local_z") or 0)
-        sl_text = slurl_label(region, s["local_x"], s["local_y"], s.get("local_z") or 0)
         pop = popup_html(
             s.get("name") or "Special",
             [
@@ -486,7 +471,6 @@ def generate_html(data: dict) -> None:
                 ("Note", s.get("note") or ""),
             ],
             sl,
-            sl_text,
         )
         prod = js_escape((s.get("prod") or "").strip())
         icon = js_escape((s.get("icon") or "").strip())
