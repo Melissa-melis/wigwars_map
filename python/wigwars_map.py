@@ -675,7 +675,7 @@ FILTER_HTML_TEMPLATE = """<!DOCTYPE html>
   <div class="hint" id="hint">@@HINT@@</div>
   <div class="left-stack">
   <div class="disclaimer">This map is provided as is, without any guarantee, and is not affiliated with WigWars or N+K products. For any questions or update requests, please contact me in-world: Mélissa (melis).</div>
-  <a class="story-ad" href="../stories/index.html">
+  <a class="story-ad" href="stories/index.html">
     <span class="story-mark" aria-hidden="true">☠</span>
     <span class="story-kicker">Pirate short stories</span>
     <strong class="story-title">The Buccaneer of the Turtle</strong>
