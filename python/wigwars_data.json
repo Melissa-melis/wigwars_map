@@ -469,7 +469,7 @@
       "x": 1111,
       "y": 1047,
       "prod": "sugar",
-      "faction": "Red Mercy",
+      "faction": "-",
       "icon": "🍬",
       "note": ""
     },
@@ -478,25 +478,12 @@
       "x": 1139,
       "y": 1075,
       "prod": "sugar",
-      "faction": "Red Mercy",
+      "faction": "-",
       "icon": "🍬",
       "note": ""
     }
   ],
   "specials": [
-    {
-      "name": "Pirate Fortress",
-      "region": "Awenhai",
-      "x": 1111,
-      "y": 1047,
-      "local_x": 47,
-      "local_y": 216,
-      "local_z": 23,
-      "prod": "",
-      "faction": "Red Mercy",
-      "note": "",
-      "icon": "☠️"
-    },
     {
       "name": "LOW PRIM SIM",
       "region": "Chauve Soris Isle",
