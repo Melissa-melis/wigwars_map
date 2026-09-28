@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Songs</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1.5rem auto; max-width: 42rem; background: #111; color: #eee; }
+    h1 { font-weight: 600; }
+    .card { background: #1c1c1c; border-radius: 10px; padding: 1rem 1.1rem; margin: 0 0 1rem; }
+    .title { font-size: 1.15rem; font-weight: 600; margin: 0 0 .75rem; }
+    audio { width: 100%; display: block; }
+    .dl { margin: .7rem 0 0; font-size: .9rem; }
+    .dl a { color: #8ab4ff; text-decoration: none; }
+    .dl a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Songs</h1>
+  <div id="list">Loading…</div>
+  <script>
+    const known = [
+      { file: "La reine des vents .mp3", title: "La reine des vents" }
+    ];
+    const USER = "Melissa-melis";
+    const REPO = "wigwars_map";
+    const FOLDER = "songs";
+    const ok = /\.mp3$/i;
+
+    function titleFrom(name) {
+      return name.replace(/\.mp3$/i, "").trim();
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    function render(songs) {
+      const list = document.getElementById("list");
+      if (!songs.length) {
+        list.textContent = "No songs yet.";
+        return;
+      }
+      list.innerHTML = songs.map(s => {
+        const src = encodeURIComponent(s.file);
+        const title = escapeHtml(s.title || titleFrom(s.file));
+        return `
+          <article class="card">
+            <h2 class="title">${title}</h2>
+            <audio controls preload="metadata">
+              <source src="${src}" type="audio/mpeg">
+            </audio>
+            <p class="dl"><a href="${src}" download="${escapeHtml(s.file)}">Download</a></p>
+          </article>`;
+      }).join("");
+    }
+
+    render(known);
+
+    fetch(`https://api.github.com/repos/${USER}/${REPO}/contents/${FOLDER}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(files => {
+        const seen = new Set(known.map(s => s.file));
+        const extra = (Array.isArray(files) ? files : [])
+          .filter(f => f.type === "file" && ok.test(f.name) && !seen.has(f.name))
+          .map(f => ({ file: f.name, title: titleFrom(f.name) }))
+          .sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+        if (extra.length) render(known.concat(extra));
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>
